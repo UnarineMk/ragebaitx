@@ -1,26 +1,35 @@
 import { createHeroScene } from './hero-scene.js';
-import { CLIPS, CATEGORIES, SOCIALS, COLLECTIONS } from './data.js';
+import { CLIPS, CATEGORIES, SOCIALS } from './data.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const coarse = window.matchMedia('(pointer: coarse)').matches;
+const finePointer = window.matchMedia('(pointer: fine)').matches;
 const isSmall = () => window.innerWidth < 860;
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const ICONS = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
   eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   heart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8.5-5-8.5-11A4.8 4.8 0 0 1 12 6.7a4.8 4.8 0 0 1 8.5 2.8c0 6-8.5 11-8.5 11z"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>',
-  fire: '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2.6 1.6-4.2 1.6-4.2S9 10 10.6 10C10.6 6 12 2 12 2z"/></svg>',
+  up: '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 16l6-6 4 4 6-6M14 8h6v6"/></svg>',
   youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9L15.5 12z"/></svg>',
   tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.4v13.4a2.9 2.9 0 1 1-2.9-2.9c.3 0 .6 0 .9.1V9.1a6.4 6.4 0 1 0 5.4 6.3V8.6a8 8 0 0 0 4.7 1.5V6.7a4.7 4.7 0 0 1-4.7-4.7z"/></svg>',
   instagram: '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:#f5f5f5;stroke-width:2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="0.6" style="fill:#f5f5f5"/></svg>',
   facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>',
 };
+const vThumb = (t) => t.replace(/\.webp$/, '-v.webp');
+const statsHTML = (c) => {
+  const p = [];
+  if (c.views) p.push(`<span>${ICONS.eye}${esc(c.views)}</span>`);
+  if (c.likes) p.push(`<span>${ICONS.heart}${esc(c.likes)}</span>`);
+  if (c.sample) p.push('<span class="badge-sample mono">SAMPLE DATA</span>');
+  return p.length ? `<div class="stats mono">${p.join('')}</div>` : '';
+};
 
-/* ───────────────────────── loader ───────────────────────── */
+/* ═════════════════════════ LOADER ═════════════════════════ */
 const pctEl = $('.loader__pct');
 const barEl = $('.loader__bar span');
 let pct = 0;
@@ -41,313 +50,367 @@ function revealSite() {
     setTimeout(() => document.body.classList.add('is-ready'), 250);
   }, reduceMotion ? 0 : 450);
 }
-window.addEventListener('load', () => setTimeout(revealSite, reduceMotion ? 0 : 600));
-setTimeout(revealSite, 3500); // never block the page for long
+window.addEventListener('load', () => setTimeout(revealSite, reduceMotion ? 0 : 500));
+setTimeout(revealSite, 3500);
 
-/* ───────────────────────── hero scene ───────────────────────── */
-const hero = $('#hero');
-const canvas = $('.hero__canvas');
-const heroContent = $('.hero__content');
-const chapter = $('.hero__chapter');
+/* ═════════════════════════ CUSTOM CURSOR ═════════════════════════ */
+const cursor = $('.cursor');
+const mouse = { x: innerWidth / 2, y: innerHeight / 2, nx: 0, ny: 0 };
+if (finePointer && !reduceMotion) {
+  document.documentElement.classList.add('has-cursor');
+  const ring = $('.cursor__ring'), dot = $('.cursor__dot'), label = $('.cursor__label');
+  let rx = mouse.x, ry = mouse.y;
+  window.addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+  window.addEventListener('pointerdown', () => cursor.classList.add('is-down'));
+  window.addEventListener('pointerup', () => cursor.classList.remove('is-down'));
+  document.addEventListener('pointerover', (e) => {
+    const t = e.target.closest('[data-cursor], a, button, [data-open]');
+    if (!t) { cursor.classList.remove('is-hover'); return; }
+    label.textContent = t.dataset.cursor || (t.matches('[data-open]') ? 'PLAY' : 'OPEN');
+    cursor.classList.add('is-hover');
+  });
+  document.addEventListener('pointerleave', () => { cursor.style.opacity = '0'; });
+  document.addEventListener('pointerenter', () => { cursor.style.opacity = '1'; });
+  (function loop() {
+    rx += (mouse.x - rx) * 0.2;
+    ry += (mouse.y - ry) * 0.2;
+    ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+    dot.style.transform = `translate(${mouse.x}px, ${mouse.y}px) translate(-50%, -50%)`;
+    label.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(loop);
+  })();
+} else {
+  window.addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+}
+
+/* ═════════════════════════ HERO: THE FEED ═════════════════════════ */
+const feed = $('#hero');
+const world = $('.feed__world');
+const screensEl = $('.feed__screens');
+const intro = $('.feed__intro');
 const scrollCue = $('.scroll-cue');
+const depthVal = $('.depth__val');
+const depthBar = $('.depth__bar span');
+
+// 3D backdrop
 let scene = null;
 try {
-  scene = createHeroScene(canvas, {
-    quality: isSmall() || coarse ? 0.45 : 0.7,
-    maxQuality: isSmall() || coarse ? 0.55 : 0.85,
+  scene = createHeroScene($('.feed__canvas'), {
+    quality: isSmall() || !finePointer ? 0.42 : 0.6,
+    maxQuality: isSmall() || !finePointer ? 0.5 : 0.75,
     staticFrame: reduceMotion,
   });
-} catch (e) {
-  scene = null;
-}
-if (scene) {
-  hero.classList.add('has-webgl');
-  scene.start();
-  const io = new IntersectionObserver(([en]) => {
-    if (reduceMotion) return;
-    en.isIntersecting && !document.hidden ? scene.start() : scene.stop();
-  });
-  io.observe(hero);
-  document.addEventListener('visibilitychange', () => {
-    if (reduceMotion) return;
-    document.hidden ? scene.stop() : scene.start();
-  });
-  if (!coarse && !reduceMotion) {
-    window.addEventListener('pointermove', (e) => {
-      scene.setMouse((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
-    }, { passive: true });
+} catch (e) { scene = null; }
+if (scene) { feed.classList.add('has-webgl'); scene.start(); }
+
+const N_SCREENS = 24;
+const Z_START = -520;
+const Z_STEP = 225;
+const EXIT_Z = -6200;
+const CAM_END = Math.abs(EXIT_Z) - 750;
+const depthItems = []; // { el, z }
+
+function buildTunnel() {
+  screensEl.innerHTML = '';
+  $$('.gate', world).forEach((g) => g.remove());
+  depthItems.length = 0;
+  const vw = innerWidth, vh = innerHeight;
+  const small = vw < 860;
+  const rx = clamp(vw * (small ? 0.36 : 0.42), 150, 780);
+  const ry = clamp(vh * (small ? 0.34 : 0.4), 180, 430);
+  const scale = small ? 0.62 : clamp(vw / 1440, 0.75, 1.15);
+
+  for (let i = 0; i < N_SCREENS; i++) {
+    const c = CLIPS[i % CLIPS.length];
+    const a = i * 2.39996 + 0.6;
+    const f = 0.88 + ((i * 37) % 10) / 33;
+    const x = Math.cos(a) * rx * f;
+    const y = Math.sin(a) * ry * f;
+    const z = Z_START - i * Z_STEP;
+    const portrait = i % 4 === 2;
+    const w = (portrait ? 190 : 320) * scale;
+    const h = (portrait ? 300 : 190) * scale;
+    const rotY = (-x / rx) * 16;
+    const rotZ = (((i * 53) % 9) - 4) * 0.8;
+    const el = document.createElement('button');
+    el.className = 'screen';
+    el.dataset.open = c.id;
+    el.dataset.cursor = 'PLAY';
+    el.setAttribute('aria-label', `Play: ${c.title}`);
+    el.style.cssText = `--w:${w}px;--h:${h}px;transform:translate3d(${x}px,${y}px,${z}px) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+    el.innerHTML = `<span class="screen__in">
+        <img src="${esc(portrait ? vThumb(c.thumb) : c.thumb)}" alt="" loading="${i < 6 ? 'eager' : 'lazy'}" decoding="async" />
+        <span class="screen__bar mono"><b>REC</b><span>${esc(c.category)}</span></span>
+        <span class="screen__hook">${esc(c.hook || c.title)}</span>
+      </span>`;
+    screensEl.appendChild(el);
+    depthItems.push({ el, z });
   }
+  const colors = ['#ff3d81', '#8a42ff', '#ff7138'];
+  for (let k = 0; k < 6; k++) {
+    const z = -1150 - k * 1000;
+    const g = document.createElement('div');
+    g.className = 'gate';
+    g.style.cssText = `--gw:${rx * 2.7}px;--gh:${ry * 2.6}px;--gc:${colors[k % 3]};transform:translate3d(0,0,${z}px)`;
+    g.innerHTML = `<span>GATE 0${k + 1}</span>`;
+    world.appendChild(g);
+    depthItems.push({ el: g, z });
+  }
+  $$('.plane', world).forEach((p) => {
+    const z = Number(p.dataset.z);
+    p.style.transform = `translate(-50%, -50%) translate3d(0, 0, ${z}px)`;
+    depthItems.push({ el: p, z, plane: true });
+  });
 }
+buildTunnel();
 
 function heroProgress() {
-  const r = hero.getBoundingClientRect();
-  const span = Math.max(1, r.height - window.innerHeight);
-  return Math.min(1, Math.max(0, -r.top / span));
-}
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-
-/* ───────────────────────── scroll-driven UI ───────────────────────── */
-const nav = $('.nav');
-const toTop = $('.to-top');
-const aboutTitle = $('[data-scrub]');
-let words = [];
-if (aboutTitle) {
-  const text = aboutTitle.textContent.trim().split(/\s+/);
-  aboutTitle.innerHTML = text.map((w) => `<span class="w${/VIRAL/.test(w) ? ' hot-word' : ''}">${esc(w)}</span>`).join(' ');
-  words = $$('.w', aboutTitle);
+  const r = feed.getBoundingClientRect();
+  return clamp(-r.top / Math.max(1, r.height - innerHeight));
 }
 
-let ticking = false;
-function onScroll() {
-  if (ticking) return;
-  ticking = true;
-  requestAnimationFrame(() => {
-    ticking = false;
-    const y = window.scrollY;
-    nav.classList.toggle('is-scrolled', y > 40);
+let camZ = 0, lookX = 0, lookY = 0, feedRunning = false;
+function renderFeed() {
+  const p = reduceMotion ? 0 : heroProgress();
+  const target = p * CAM_END;
+  camZ += (target - camZ) * (reduceMotion ? 1 : 0.09);
+  mouse.nx = (mouse.x / innerWidth) * 2 - 1;
+  mouse.ny = (mouse.y / innerHeight) * 2 - 1;
+  const tx = reduceMotion || !finePointer ? 0 : mouse.nx;
+  const ty = reduceMotion || !finePointer ? 0 : mouse.ny;
+  lookX += (tx - lookX) * 0.06;
+  lookY += (ty - lookY) * 0.06;
+  world.style.transform = `translate3d(${-lookX * 36}px, ${-lookY * 26}px, 0) rotateX(${lookY * 4}deg) rotateY(${-lookX * 6}deg) translateZ(${camZ}px)`;
 
-    // hero
-    const p = heroProgress();
-    if (scene) scene.setScroll(p);
-    if (!reduceMotion) {
-      const out = clamp01(p / 0.38);
-      heroContent.style.opacity = String(1 - out);
-      heroContent.style.transform = `translate3d(0, ${-out * 90}px, 0)`;
-      const cin = clamp01((p - 0.42) / 0.2);
-      const cout = clamp01((p - 0.86) / 0.14);
-      chapter.style.opacity = String(cin * (1 - cout));
-      chapter.style.transform = `translate3d(0, calc(-40% + ${(1 - cin) * 60 - cout * 60}px), 0)`;
-      scrollCue.style.opacity = String(1 - clamp01(p / 0.12));
+  for (const it of depthItems) {
+    const d = it.z + camZ; // 0 = focal plane, positive = towards the viewer
+    let o = 1;
+    if (d > 780) o = 0;
+    else if (d > 260) o = 1 - (d - 260) / 520;
+    if (d < -3400) o = 0;
+    else if (d < -2000) o = Math.min(o, 1 - (-2000 - d) / 1400);
+    if (it.plane) {
+      o = d > 0 ? clamp(1 - d / 240) : clamp((d + 2700) / 1300);
     }
+    const vis = o > 0.01;
+    it.el.style.opacity = vis ? o.toFixed(3) : '0';
+    it.el.style.visibility = vis ? 'visible' : 'hidden';
+  }
 
-    // about words
-    if (words.length && !reduceMotion) {
-      const r = aboutTitle.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const prog = clamp01((vh * 0.85 - r.top) / (r.height + vh * 0.35));
-      const n = Math.round(prog * words.length);
-      words.forEach((w, i) => {
-        w.classList.toggle('on', i < n);
-        w.classList.toggle('hot', i < n && w.classList.contains('hot-word'));
-      });
-    }
-
-    // back-to-top ring
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    toTop.style.setProperty('--off', String(138.2 * (1 - (max > 0 ? y / max : 0))));
-  });
+  const introOut = clamp(p / 0.07);
+  intro.style.opacity = String(1 - introOut);
+  intro.style.transform = `translate(-50%, ${introOut * 40}px)`;
+  intro.style.pointerEvents = introOut > 0.9 ? 'none' : '';
+  scrollCue.style.opacity = String(1 - clamp(p / 0.05));
+  depthVal.textContent = String(Math.round(camZ / 10)).padStart(4, '0');
+  depthBar.style.height = `${p * 100}%`;
+  if (scene) {
+    scene.setScroll(p);
+    if (finePointer && !reduceMotion) scene.setMouse(lookX * 0.8, -lookY * 0.6);
+  }
 }
-window.addEventListener('scroll', onScroll, { passive: true });
-window.addEventListener('resize', onScroll);
-onScroll();
-
-toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }));
-
-/* ───────────────────────── nav + mobile menu ───────────────────────── */
-const burger = $('.nav__burger');
-const menu = $('.mobile-menu');
-burger.addEventListener('click', () => {
-  const open = burger.getAttribute('aria-expanded') === 'true';
-  burger.setAttribute('aria-expanded', String(!open));
-  menu.hidden = open;
-  document.body.style.overflow = open ? '' : 'hidden';
+function feedLoop() {
+  if (!feedRunning) return;
+  renderFeed();
+  requestAnimationFrame(feedLoop);
+}
+const feedIO = new IntersectionObserver(([en]) => {
+  if (en.isIntersecting && !reduceMotion) {
+    if (!feedRunning) { feedRunning = true; requestAnimationFrame(feedLoop); }
+    if (scene && !document.hidden) scene.start();
+  } else {
+    feedRunning = false;
+    if (scene && !reduceMotion) scene.stop();
+  }
 });
-$$('a', menu).forEach((a) => a.addEventListener('click', () => {
-  burger.setAttribute('aria-expanded', 'false');
-  menu.hidden = true;
-  document.body.style.overflow = '';
-}));
+feedIO.observe(feed);
+document.addEventListener('visibilitychange', () => {
+  if (!scene || reduceMotion) return;
+  document.hidden ? scene.stop() : feedRunning && scene.start();
+});
+renderFeed();
 
-/* ───────────────────────── clocks ───────────────────────── */
-const hudClock = $('.hud__clock');
-const feedClock = $('.feed-clock');
-function tickClock() {
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  const ss = String(d.getSeconds()).padStart(2, '0');
-  hudClock.textContent = `${hh}:${mm}`;
-  feedClock.textContent = `· UPDATED ${hh}:${mm}:${ss}`;
-}
-tickClock();
-setInterval(tickClock, 1000);
-$('.year').textContent = new Date().getFullYear();
+/* ═════════════════════════ CLIPS: pinned coverflow ═════════════════════════ */
+const clipsSec = $('#clips');
+const track = $('#clips-track');
+const progressFill = $('.clips__progress span');
+const idxEl = $('.clips__idx');
+const totalEl = $('.clips__total');
 
-/* ───────────────────────── clips ───────────────────────── */
-const stats = (c) => {
-  const parts = [];
-  if (c.views) parts.push(`<span>${ICONS.eye}${esc(c.views)}</span>`);
-  if (c.likes) parts.push(`<span>${ICONS.heart}${esc(c.likes)}</span>`);
-  if (c.sample) parts.push('<span class="badge-sample mono">SAMPLE DATA</span>');
-  return parts.length ? `<div class="clip__stats mono">${parts.join('')}</div>` : '';
-};
-
-function clipCard(c, extraClass = '') {
-  const size = c.size ? ` clip--${c.size}` : '';
+function cardHTML(c, featured) {
   return `
-  <article class="clip${size} ${extraClass}" data-cat="${esc(c.category)}" data-id="${esc(c.id)}">
-    <button class="clip__media" data-open="${esc(c.id)}" aria-label="Play: ${esc(c.title)}">
+  <article class="card${featured ? ' card--featured' : ''}" data-cat="${esc(c.category)}" data-id="${esc(c.id)}">
+    <button class="card__media" data-open="${esc(c.id)}" data-cursor="PLAY" aria-label="Play: ${esc(c.title)}">
       <img src="${esc(c.thumb)}" alt="" loading="lazy" decoding="async" width="1280" height="720" />
       ${c.video ? `<video muted loop playsinline preload="none" data-src="${esc(c.video)}"></video>` : ''}
-      <span class="clip__tag mono">${esc(c.category)}</span>
-      <span class="clip__play">${ICONS.play}</span>
-      <span class="clip__dur mono">${esc(c.duration || '')}</span>
-      <span class="clip__bar"><span></span></span>
+      <span class="card__tag mono">${featured ? '★ FEATURED · ' : ''}${esc(c.category)}</span>
+      <span class="card__dur mono">${esc(c.duration || '')}</span>
+      <span class="card__hook">${esc(c.hook || '')}</span>
+      <span class="card__play">${ICONS.play}</span>
+      <span class="card__bar"><span></span></span>
     </button>
-    <div class="clip__meta">
+    <div class="card__meta">
       <h3>${esc(c.title)}</h3>
       <p>${esc(c.desc)}</p>
-      ${stats(c)}
+      ${statsHTML(c)}
     </div>
   </article>`;
 }
-
 const featuredClip = CLIPS.find((c) => c.featured) || CLIPS[0];
-$('#featured').innerHTML = `
-  <article class="clip" data-cat="${esc(featuredClip.category)}" data-id="${esc(featuredClip.id)}">
-    <button class="clip__media" data-open="${esc(featuredClip.id)}" aria-label="Play featured clip: ${esc(featuredClip.title)}">
-      <img src="${esc(featuredClip.thumb)}" alt="" loading="lazy" decoding="async" width="1280" height="720" />
-      ${featuredClip.video ? `<video muted loop playsinline preload="none" data-src="${esc(featuredClip.video)}"></video>` : ''}
-      <span class="clip__tag mono">${esc(featuredClip.category)}</span>
-      <span class="clip__play">${ICONS.play}</span>
-      <span class="clip__dur mono">${esc(featuredClip.duration || '')}</span>
-      <span class="clip__bar"><span></span></span>
-    </button>
-    <div class="clip__meta">
-      <p class="featured__label mono"><span class="live-dot"></span> FEATURED CLIP</p>
-      <h3>${esc(featuredClip.title)}</h3>
-      <p>${esc(featuredClip.desc)}</p>
-      ${stats(featuredClip)}
-      <button class="btn btn--primary" data-open="${esc(featuredClip.id)}">Watch now ${ICONS.play}</button>
-    </div>
-  </article>`;
+const ordered = [featuredClip, ...CLIPS.filter((c) => c !== featuredClip)];
+track.innerHTML = ordered.map((c, i) => cardHTML(c, i === 0)).join('');
+const cards = $$('.card', track);
 
-const grid = $('#clip-grid');
-grid.innerHTML = CLIPS.filter((c) => c !== featuredClip).map((c) => clipCard(c, 'reveal')).join('');
+const pinned = () => !isSmall() && !reduceMotion;
+let maxShift = 0;
+function sizeClips() {
+  if (!pinned()) { clipsSec.style.height = ''; track.style.transform = ''; return; }
+  maxShift = Math.max(0, track.scrollWidth - innerWidth);
+  clipsSec.style.height = `${maxShift + innerHeight * 1.15}px`;
+}
+function visibleCards() { return cards.filter((c) => !c.classList.contains('is-hidden')); }
+function updateClips() {
+  const vis = visibleCards();
+  totalEl.textContent = String(vis.length).padStart(2, '0');
+  if (!pinned()) {
+    // native swipe: just track the centred card
+    const mid = innerWidth / 2;
+    let best = 0, bestD = Infinity;
+    vis.forEach((c, i) => { const r = c.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - mid); if (d < bestD) { bestD = d; best = i; } });
+    idxEl.textContent = String(best + 1).padStart(2, '0');
+    return;
+  }
+  const top = clipsSec.offsetTop;
+  const span = Math.max(1, clipsSec.offsetHeight - innerHeight);
+  const p = clamp((scrollY - top) / span);
+  track.style.transform = `translate3d(${-p * maxShift}px, 0, 0)`;
+  progressFill.style.width = `${p * 100}%`;
+  const mid = innerWidth / 2;
+  let best = 0, bestD = Infinity;
+  vis.forEach((c, i) => {
+    const r = c.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const t = clamp((cx - mid) / mid, -1.4, 1.4);
+    c.style.transform = `rotateY(${-t * 16}deg) translateZ(${-Math.abs(t) * 90}px)`;
+    c.style.opacity = String(1 - Math.min(0.55, Math.abs(t) * 0.35));
+    const d = Math.abs(cx - mid);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  idxEl.textContent = String(best + 1).padStart(2, '0');
+}
+track.addEventListener('scroll', updateClips, { passive: true });
 
-// filters
 const filtersEl = $('.filters');
-filtersEl.innerHTML = CATEGORIES.map((cat, i) =>
-  `<button class="filter" role="tab" aria-selected="${i === 0}" data-filter="${esc(cat)}">${esc(cat)}</button>`).join('');
+filtersEl.innerHTML = CATEGORIES.map((cat, i) => `<button class="filter" role="tab" aria-selected="${i === 0}" data-filter="${esc(cat)}" data-cursor="FILTER">${esc(cat)}</button>`).join('');
 filtersEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.filter');
   if (!btn) return;
   $$('.filter', filtersEl).forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
   const cat = btn.dataset.filter;
-  const cards = $$('.clip', grid);
-  cards.forEach((c) => c.classList.add('is-leaving'));
-  setTimeout(() => {
-    cards.forEach((c) => {
-      const show = cat === 'All' || c.dataset.cat === cat;
-      c.classList.toggle('is-hidden', !show);
-      c.classList.add('in');
-    });
-    requestAnimationFrame(() => cards.forEach((c) => c.classList.remove('is-leaving')));
-  }, reduceMotion ? 0 : 280);
+  cards.forEach((c) => c.classList.toggle('is-hidden', !(cat === 'All' || c.dataset.cat === cat)));
+  sizeClips();
+  if (pinned() && scrollY > clipsSec.offsetTop) window.scrollTo({ top: clipsSec.offsetTop, behavior: 'auto' });
+  track.scrollLeft = 0;
+  updateClips();
 });
 
-// hover previews (real videos only)
+// hover previews for real videos
 document.addEventListener('pointerover', (e) => {
-  const card = e.target.closest('.clip');
-  if (!card || coarse) return;
+  const card = e.target.closest('.card');
+  if (!card || !finePointer) return;
   const v = $('video', card);
-  if (v) {
-    if (!v.src) v.src = v.dataset.src;
-    card.classList.add('is-previewing');
-    v.play().catch(() => {});
-  }
+  if (v) { if (!v.src) v.src = v.dataset.src; card.classList.add('is-previewing'); v.play().catch(() => {}); }
 });
 document.addEventListener('pointerout', (e) => {
-  const card = e.target.closest('.clip');
+  const card = e.target.closest('.card');
   if (!card || card.contains(e.relatedTarget)) return;
   const v = $('video', card);
   if (v) { v.pause(); card.classList.remove('is-previewing'); }
 });
 
-/* ───────────────────────── trending ───────────────────────── */
+/* ═════════════════════════ TRENDING: leaderboard ═════════════════════════ */
 const toNum = (s) => {
-  if (!s) return 0;
-  const m = String(s).match(/([\d.]+)\s*([KkMm]?)/);
+  const m = String(s || '').match(/([\d.]+)\s*([KkMm]?)/);
   if (!m) return 0;
-  return parseFloat(m[1]) * (m[2].toLowerCase() === 'm' ? 1e6 : m[2].toLowerCase() === 'k' ? 1e3 : 1);
+  return parseFloat(m[1]) * ({ m: 1e6, k: 1e3 }[m[2].toLowerCase()] || 1);
 };
-const trending = [...CLIPS].sort((a, b) => toNum(b.views) - toNum(a.views)).slice(0, 7);
-$('#rail-trending').innerHTML = trending.map((c, i) => `
-  <button class="tcard" data-open="${esc(c.id)}" aria-label="Play: ${esc(c.title)}">
-    <img src="${esc(c.thumb.replace('.webp', '-v.webp'))}" alt="" loading="lazy" decoding="async" />
-    <span class="tcard__rank">${String(i + 1).padStart(2, '0')}</span>
-    ${i < 3 ? `<span class="tcard__label mono">${ICONS.fire} TRENDING</span>` : ''}
-    <span class="tcard__body">
-      <span class="tcard__meta mono">${esc(c.category)}${c.views ? ' · ' + esc(c.views) + ' views' : ''}${c.sample ? ' · sample' : ''}</span>
-      <h4>${esc(c.title)}</h4>
-    </span>
-  </button>`).join('');
+const ranked = [...CLIPS].sort((a, b) => toNum(b.views) - toNum(a.views));
+$('#board').innerHTML = ranked.map((c, i) => `
+  <li class="board__row reveal">
+    <button class="board__btn" data-open="${esc(c.id)}" data-cursor="PLAY" data-thumb="${esc(c.thumb)}" data-hook="${esc(c.hook || '')}">
+      <span class="board__rank">${String(i + 1).padStart(2, '0')}</span>
+      <img class="board__thumb" src="${esc(c.thumb)}" alt="" loading="lazy" />
+      <span class="board__title">${esc(c.title)}<small>${esc(c.category)}${c.sample ? ' · sample data' : ''}</small></span>
+      <span class="board__cell board__cell--views mono">${c.views ? esc(c.views) + ' views' : ''}</span>
+      <span class="board__cell board__cell--dur mono">${esc(c.duration || '')}</span>
+      <span class="board__cell mono">${i < 3 ? `<span class="board__trend">${ICONS.up} HOT</span>` : ''}</span>
+      <span class="board__arrow">${ICONS.arrow}</span>
+    </button>
+  </li>`).join('');
+const preview = $('.board__preview');
+const prevImg = $('img', preview);
+const prevTxt = $('span', preview);
+let px = 0, py = 0, pOn = false;
+$('#board').addEventListener('pointerover', (e) => {
+  const b = e.target.closest('.board__btn');
+  if (!b || !finePointer) return;
+  if (prevImg.getAttribute('src') !== b.dataset.thumb) prevImg.src = b.dataset.thumb;
+  prevTxt.textContent = b.dataset.hook;
+  preview.classList.add('is-on');
+  if (!pOn) { pOn = true; px = mouse.x; py = mouse.y; requestAnimationFrame(previewLoop); }
+});
+$('#board').addEventListener('pointerleave', () => { preview.classList.remove('is-on'); pOn = false; });
+function previewLoop() {
+  if (!pOn) return;
+  px += (mouse.x + 190 - px) * 0.14;
+  py += (mouse.y - py) * 0.14;
+  preview.style.left = `${px}px`;
+  preview.style.top = `${py}px`;
+  requestAnimationFrame(previewLoop);
+}
 
-const latest = [...CLIPS].reverse();
-$('#rail-latest').innerHTML = latest.map((c, i) => `
-  <button class="tcard" data-open="${esc(c.id)}" aria-label="Play: ${esc(c.title)}">
-    <img src="${esc(c.thumb)}" alt="" loading="lazy" decoding="async" />
-    ${i < 2 ? '<span class="tcard__label tcard__label--new mono">NEW</span>' : ''}
+$('#rail-latest').innerHTML = [...CLIPS].reverse().map((c, i) => `
+  <button class="tcard" data-open="${esc(c.id)}" data-cursor="PLAY" aria-label="Play: ${esc(c.title)}">
+    <img src="${esc(vThumb(c.thumb))}" alt="" loading="lazy" decoding="async" />
+    ${i < 2 ? '<span class="tcard__label mono">NEW</span>' : ''}
+    <span class="tcard__hook">${esc(c.hook || '')}</span>
     <span class="tcard__body">
       <span class="tcard__meta mono">${esc(c.duration || '')} · ${esc(c.category)}${c.sample ? ' · sample' : ''}</span>
       <h4>${esc(c.title)}</h4>
     </span>
   </button>`).join('');
-
-$('#collections').innerHTML = COLLECTIONS.map((c) => `
-  <article class="coll reveal">
-    <div class="coll__stack">${c.thumbs.map((t) => `<img src="${esc(t)}" alt="" loading="lazy" decoding="async" />`).join('')}</div>
-    <h4>${esc(c.title)}</h4>
-    <p>${esc(c.desc)}</p>
-  </article>`).join('');
-
-// rail arrows
 $$('.carousel-nav .icon-btn').forEach((b) => b.addEventListener('click', () => {
   const rail = document.getElementById(b.dataset.target);
   rail.scrollBy({ left: Number(b.dataset.dir) * rail.clientWidth * 0.8, behavior: reduceMotion ? 'auto' : 'smooth' });
 }));
-
-// drag-to-scroll (mouse only; touch scrolls natively)
 $$('.rail').forEach((rail) => {
-  let down = false, startX = 0, startLeft = 0, moved = false;
-  rail.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    down = true; moved = false; startX = e.clientX; startLeft = rail.scrollLeft;
-  });
+  let down = false, sx = 0, sl = 0, moved = false;
+  rail.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; down = true; moved = false; sx = e.clientX; sl = rail.scrollLeft; });
   window.addEventListener('pointermove', (e) => {
     if (!down) return;
-    const dx = e.clientX - startX;
+    const dx = e.clientX - sx;
     if (Math.abs(dx) > 5) { moved = true; rail.classList.add('is-dragging'); }
-    rail.scrollLeft = startLeft - dx;
+    rail.scrollLeft = sl - dx;
   });
-  window.addEventListener('pointerup', () => {
-    if (!down) return;
-    down = false;
-    setTimeout(() => rail.classList.remove('is-dragging'), 0);
-  });
+  window.addEventListener('pointerup', () => { if (!down) return; down = false; setTimeout(() => rail.classList.remove('is-dragging'), 0); });
   rail.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
 });
 
-/* ───────────────────────── socials ───────────────────────── */
+/* ═════════════════════════ SOCIALS ═════════════════════════ */
 $('#social-grid').innerHTML = SOCIALS.map((s, i) => {
   const soon = !s.url;
   const tag = soon ? 'div' : 'a';
-  const attrs = soon ? 'aria-disabled="true"' : `href="${esc(s.url)}" target="_blank" rel="noopener"`;
+  const attrs = soon ? 'aria-disabled="true"' : `href="${esc(s.url)}" target="_blank" rel="noopener" data-cursor="FOLLOW"`;
   return `
   <${tag} class="social social--${esc(s.id)} reveal${soon ? ' is-soon' : ''}" ${attrs} style="transition-delay:${i * 80}ms">
     <span class="social__icon">${ICONS[s.id] || ''}</span>
-    <div>
-      <h3 class="social__name">${esc(s.label)}</h3>
-      <p class="social__handle mono">${esc(s.handle)}</p>
-    </div>
+    <div><h3 class="social__name">${esc(s.label)}</h3><p class="social__handle mono">${esc(s.handle)}</p></div>
     <span class="social__go">${soon ? 'Link coming soon' : esc(s.action)} ${soon ? '' : ICONS.arrow}</span>
   </${tag}>`;
 }).join('');
-$('#footer-socials').innerHTML = SOCIALS.filter((s) => s.url)
-  .map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')
-  || '<span style="color:var(--muted)">Coming soon</span>';
+$('#footer-socials').innerHTML = SOCIALS.filter((s) => s.url).map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('') || '<span style="color:var(--muted)">Coming soon</span>';
 
-/* ───────────────────────── modal ───────────────────────── */
+/* ═════════════════════════ MODAL ═════════════════════════ */
 const modal = $('#modal');
 const modalBody = $('.modal__body', modal);
 function openClip(id) {
@@ -356,23 +419,18 @@ function openClip(id) {
   const follow = SOCIALS.find((s) => s.url);
   modalBody.innerHTML = c.video
     ? `<video src="${esc(c.video)}" poster="${esc(c.thumb)}" controls autoplay playsinline></video>`
-    : `<div class="modal__soon">
-         <img src="${esc(c.thumb)}" alt="" />
-         <div>
-           <p class="mono" style="color:var(--pink)">${esc(c.category)} · SAMPLE CLIP</p>
-           <h3>${esc(c.title)}</h3>
-           <p>This is a placeholder. The real clip lands here soon. Catch the latest drops on our socials.</p>
-           ${follow ? `<a class="btn btn--primary" href="${esc(follow.url)}" target="_blank" rel="noopener">Watch on ${esc(follow.label)} ${ICONS.arrow}</a>` : ''}
-         </div>
-       </div>`;
-  if (typeof modal.showModal === 'function') modal.showModal();
-  else modal.setAttribute('open', '');
+    : `<div class="modal__soon"><img src="${esc(c.thumb)}" alt="" /><div>
+         <p class="mono" style="color:var(--pink)">${esc(c.category)} · SAMPLE CLIP</p>
+         <h3>${esc(c.title)}</h3>
+         <p>This is a placeholder. The real clip lands here soon. Catch the latest drops on our socials.</p>
+         ${follow ? `<a class="btn btn--primary" href="${esc(follow.url)}" target="_blank" rel="noopener">Watch on ${esc(follow.label)} ${ICONS.arrow}</a>` : ''}
+       </div></div>`;
+  typeof modal.showModal === 'function' ? modal.showModal() : modal.setAttribute('open', '');
 }
 function closeModal() {
   const v = $('video', modalBody);
   if (v) v.pause();
   modal.close ? modal.close() : modal.removeAttribute('open');
-  modalBody.innerHTML = '';
 }
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-open]');
@@ -382,27 +440,123 @@ $('.modal__close').addEventListener('click', closeModal);
 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 modal.addEventListener('close', () => { modalBody.innerHTML = ''; });
 
-/* ───────────────────────── logo tilt ───────────────────────── */
+/* ═════════════════════════ CHAOS METER + MISSION TOASTS ═════════════════════════ */
+const chaos = $('.chaos');
+const stars = $$('.chaos__stars i');
+let chaosLevel = 0;
+function setChaos(level) {
+  if (level === chaosLevel) return;
+  const up = level > chaosLevel;
+  chaosLevel = level;
+  stars.forEach((s, i) => s.classList.toggle('on', i < level));
+  chaos.setAttribute('aria-label', `Chaos level ${level} of 5`);
+  if (up && !reduceMotion) { chaos.classList.remove('is-flash'); void chaos.offsetWidth; chaos.classList.add('is-flash'); }
+}
+const toastsEl = $('.toasts');
+function toast(kicker, title, small) {
+  $$('.toast', toastsEl).forEach((t) => { t.classList.add('out'); setTimeout(() => t.remove(), 600); });
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<p class="mono">${esc(kicker)}</p><h4>${esc(title)}</h4>${small ? `<small>${esc(small)}</small>` : ''}`;
+  toastsEl.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('in')));
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 600); }, 3200);
+}
+const seen = new Set();
+const missionIO = new IntersectionObserver((entries) => {
+  entries.forEach((en) => {
+    const id = en.target.id;
+    if (en.isIntersecting) {
+      $$('.nav__links a').forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === '#' + id));
+      if (!seen.has(id)) {
+        seen.add(id);
+        toast(`MISSION ${en.target.dataset.missionN} UNLOCKED`, en.target.dataset.mission, '+1 ★ CHAOS');
+      }
+    }
+  });
+}, { threshold: 0.3 });
+$$('[data-mission]').forEach((s) => missionIO.observe(s));
+
+/* ═════════════════════════ SCROLL-DRIVEN UI ═════════════════════════ */
+const nav = $('.nav');
+const toTop = $('.to-top');
+const aboutTitle = $('[data-scrub]');
+let words = [];
+if (aboutTitle) {
+  aboutTitle.innerHTML = aboutTitle.textContent.trim().split(/\s+/).map((w) => `<span class="w${/VIRAL/.test(w) ? ' hot-word' : ''}">${esc(w)}</span>`).join(' ');
+  words = $$('.w', aboutTitle);
+}
+let ticking = false;
+function onScroll() {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    const y = scrollY;
+    nav.classList.toggle('is-scrolled', y > 40);
+    if (reduceMotion || !feedRunning) renderFeed();
+    updateClips();
+    if (words.length && !reduceMotion) {
+      const r = aboutTitle.getBoundingClientRect();
+      const prog = clamp((innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.35));
+      const n = Math.round(prog * words.length);
+      words.forEach((w, i) => { w.classList.toggle('on', i < n); w.classList.toggle('hot', i < n && w.classList.contains('hot-word')); });
+    }
+    const max = document.documentElement.scrollHeight - innerHeight;
+    const pp = max > 0 ? y / max : 0;
+    toTop.style.setProperty('--off', String(138.2 * (1 - pp)));
+    setChaos(pp < 0.015 ? 0 : Math.min(5, Math.ceil(pp * 5 - 0.0001)));
+  });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+let rT;
+window.addEventListener('resize', () => {
+  clearTimeout(rT);
+  rT = setTimeout(() => { buildTunnel(); sizeClips(); renderFeed(); onScroll(); }, 150);
+});
+window.addEventListener('load', () => { sizeClips(); onScroll(); });
+sizeClips();
+onScroll();
+toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }));
+
+/* ═════════════════════════ NAV / MENU / CLOCKS ═════════════════════════ */
+const burger = $('.nav__burger');
+const menu = $('.mobile-menu');
+burger.addEventListener('click', () => {
+  const open = burger.getAttribute('aria-expanded') === 'true';
+  burger.setAttribute('aria-expanded', String(!open));
+  menu.hidden = open;
+  document.body.style.overflow = open ? '' : 'hidden';
+});
+$$('a', menu).forEach((a) => a.addEventListener('click', () => { burger.setAttribute('aria-expanded', 'false'); menu.hidden = true; document.body.style.overflow = ''; }));
+const hudClock = $('.hud__clock');
+const feedClock = $('.feed-clock');
+function tickClock() {
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, '0');
+  hudClock.textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  feedClock.textContent = `· UPDATED ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+}
+tickClock();
+setInterval(tickClock, 1000);
+$('.year').textContent = new Date().getFullYear();
+
+/* ═════════════════════════ LOGO TILT + REVEALS ═════════════════════════ */
 const tilt = $('[data-tilt]');
-if (tilt && !coarse && !reduceMotion) {
+if (tilt && finePointer && !reduceMotion) {
   tilt.addEventListener('pointermove', (e) => {
     const r = tilt.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
     tilt.style.transform = `rotateY(${(x - 0.5) * 18}deg) rotateX(${(0.5 - y) * 18}deg)`;
     tilt.style.setProperty('--gx', `${x * 100}%`);
     tilt.style.setProperty('--gy', `${y * 100}%`);
   });
   tilt.addEventListener('pointerleave', () => { tilt.style.transform = ''; });
 }
-
-/* ───────────────────────── reveal on scroll ───────────────────────── */
 const revealIO = new IntersectionObserver((entries) => {
-  entries.forEach((en) => {
-    if (en.isIntersecting) { en.target.classList.add('in'); revealIO.unobserve(en.target); }
-  });
+  entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); revealIO.unobserve(en.target); } });
 }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
 $$('.reveal').forEach((el, i) => {
-  if (!el.style.transitionDelay && el.classList.contains('clip')) el.style.transitionDelay = `${(i % 3) * 90}ms`;
+  if (el.classList.contains('board__row')) el.style.transitionDelay = `${(i % 8) * 50}ms`;
   revealIO.observe(el);
 });

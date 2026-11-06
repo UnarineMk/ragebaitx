@@ -1,6 +1,6 @@
 // RageBaitX hero scene: a hand-written WebGL raymarcher (no libraries).
-// Neon coastal city at dusk, wet road, palms, streetlights and a sports car.
-// Mouse moves the camera, scroll orbits it around the car.
+// Neon coastal city at dusk, wet road, palms and streetlights, seen from a
+// first-person drive. Mouse looks around; scroll lifts the camera slightly.
 
 const VERT = `
 attribute vec2 aPos;
@@ -15,6 +15,8 @@ uniform vec2  uMouse;
 uniform float uScroll;
 uniform float uIntro;
 uniform float uHue;
+uniform vec3  uCamPos;
+uniform vec4  uCam;
 
 #define PI 3.14159265
 #define SPEED 9.0
@@ -137,48 +139,6 @@ float palm(vec2 q, float seed){
   return d;
 }
 
-// ------------------------------------------------------------ car SDF
-float sdRoundBox(vec3 p, vec3 b, float r){ vec3 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0) - r; }
-float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
-float sdCylX(vec3 p, float r, float hw){ vec2 d = abs(vec2(length(p.yz), p.x)) - vec2(r, hw); return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)); }
-
-vec2 carMap(vec3 p){
-  vec3 bp = p - vec3(0.0, 0.41, 0.0);
-  float taper = 1.0 - 0.12 * smoothstep(-0.8, 2.1, p.z);
-  bp.x /= taper;
-  float body = sdRoundBox(bp, vec3(0.95, 0.20, 2.12), 0.16) * taper;
-  body = max(body, dot(p - vec3(0.0, 0.60, 0.0), normalize(vec3(0.0, 1.0, 0.05))));
-
-  vec3 cp = p - vec3(0.0, 0.66, -0.30);
-  float cab = sdRoundBox(cp, vec3(0.68, 0.15, 0.95), 0.15);
-  cab = max(cab, dot(cp - vec3(0.0, 0.0, 0.52), normalize(vec3(0.0, 0.62, 0.78))));
-  cab = max(cab, dot(cp - vec3(0.0, 0.0, -0.62), normalize(vec3(0.0, 0.72, -0.69))));
-  float car = smin(body, cab, 0.12);
-
-  float spoiler = sdRoundBox(p - vec3(0.0, 0.69, -1.95), vec3(0.78, 0.016, 0.12), 0.015);
-  float stand = sdRoundBox(vec3(abs(p.x) - 0.5, p.y - 0.62, p.z + 1.93), vec3(0.025, 0.07, 0.04), 0.01);
-  car = min(car, min(spoiler, stand));
-
-  vec3 wp = vec3(abs(p.x) - 0.82, p.y - 0.28, abs(p.z) - 1.32);
-  car = max(car, -max(sdCylX(wp, 0.34, 0.30), p.y - 0.52));
-  float wheel = sdCylX(wp, 0.28, 0.15);
-
-  float id = 1.0;
-  if (wheel < car) { car = wheel; id = 3.0; }
-  else if (cab < body + 0.015 && p.y > 0.60) id = 2.0;
-
-  float tl = sdRoundBox(p - vec3(0.0, 0.50, -2.115), vec3(0.78, 0.02, 0.02), 0.015);
-  if (tl < car) { car = tl; id = 4.0; }
-  return vec2(car, id);
-}
-vec3 carNormal(vec3 p){
-  const vec2 k = vec2(1.0, -1.0); float e = 0.0015;
-  return normalize(k.xyy * carMap(p + k.xyy * e).x + k.yyx * carMap(p + k.yyx * e).x +
-                   k.yxy * carMap(p + k.yxy * e).x + k.xxx * carMap(p + k.xxx * e).x);
-}
-
-float sdBox2(vec2 p, vec2 b){ vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
-
 vec3 hueShift(vec3 c, float a){
   const vec3 k = vec3(0.57735);
   float ca = cos(a);
@@ -195,16 +155,11 @@ void main(){
   vec2 uv = (frag - 0.5 * uRes) / uRes.y;
   float t = uTime;
 
-  // ---------------- camera
+  // ---------------- camera (first-person drive, or fixed preset for stills)
   float s = smoothstep(0.0, 1.0, uScroll);
-  vec3 carPos = vec3(1.5, 0.012 * sin(t * 9.0), 0.0);
-  float camAng = mix(0.30, 0.72, s) + uMouse.x * 0.14;
-  float camDist = mix(6.6, 7.8, s) + (1.0 - uIntro) * 6.0;
-  vec3 ro = carPos + vec3(sin(camAng) * camDist, mix(1.30, 2.05, s) + uMouse.y * 0.30 + (1.0 - uIntro) * 1.2, -cos(camAng) * camDist);
-  ro.x = min(ro.x, 6.2);
-  float aspect = uRes.x / uRes.y;
-  float frameShift = mix(0.9, -1.9, smoothstep(0.7, 1.6, aspect));
-  vec3 ta = vec3(mix(frameShift, 0.4, s) + uMouse.x * 0.25, mix(0.85, 0.75, s), mix(3.0, 2.2, s));
+  vec3 ro = vec3(uMouse.x * 0.7 + sin(t * 0.07) * 0.35, 1.45 + uMouse.y * 0.3 + s * 0.5 + (1.0 - uIntro) * 2.0, -4.0);
+  vec3 ta = vec3(uMouse.x * 1.6 + sin(t * 0.05) * 0.5, 1.5 + uMouse.y * 0.6 + s * 0.3, 12.0);
+  if (uCam.w > 0.5) { ro = uCamPos; ta = uCam.xyz; }
   vec3 fw = normalize(ta - ro);
   vec3 rt = normalize(cross(vec3(0, 1, 0), fw));
   vec3 up = cross(fw, rt);
@@ -215,7 +170,6 @@ void main(){
   float tMax = 1e4;
 
   // ---------------- ground
-  float carYaw = 0.10 * sin(t * 0.35) + uMouse.x * 0.12;
   if (rd.y < 0.0) {
     float tg = -ro.y / rd.y;
     tMax = tg;
@@ -246,17 +200,6 @@ void main(){
     // streetlight pools
     float lz = mod(wz, 9.0) - 4.5;
     col += ORANGE * 0.35 * exp(-(pow(ax - 3.6, 2.0) + lz * lz) * 0.32);
-
-    // car shadow + neon underglow
-    vec3 q = rotY(p - carPos, -carYaw);
-    float d = sdBox2(q.xz, vec2(0.88, 1.95));
-    col *= 1.0 - 0.9 * smoothstep(0.35, -0.25, d);
-    col += PINK * exp(-max(d, 0.0) * 2.4) * 0.75 * smoothstep(-0.35, 0.15, d);
-
-    // taillight streak on wet road
-    vec3 tlw = carPos + rotY(vec3(0.0, 0.0, -2.12), carYaw);
-    float sd = length(vec2((p.x - tlw.x) * 1.4, max(tlw.z - p.z, 0.0) * 0.12 + max(p.z - tlw.z, 0.0) * 3.0));
-    col += RED * 0.35 * exp(-sd * sd * 2.0) * step(p.z, tlw.z + 0.2);
 
     col = mix(col, lin(vec3(0.36, 0.10, 0.22)), 1.0 - exp(-tg * 0.02));
   }
@@ -313,74 +256,6 @@ void main(){
       if (tl > 0.0 && tl < tMax + 0.5) {
         float d = length(oc - rd * tl);
         col += ORANGE * 0.0035 / (d * d + 0.0015) * exp(-tl * 0.02);
-      }
-    }
-  }
-
-  // ---------------- car (raymarched)
-  vec3 roc = rotY(ro - carPos, -carYaw);
-  vec3 rdc = rotY(rd, -carYaw);
-  vec3 cc = vec3(0.0, 0.6, 0.0);
-  vec3 oc = roc - cc;
-  float b = dot(oc, rdc);
-  float cterm = dot(oc, oc) - 2.7 * 2.7;
-  float disc = b * b - cterm;
-  if (disc > 0.0) {
-    float tt = max(-b - sqrt(disc), 0.0);
-    float tEnd = -b + sqrt(disc);
-    vec2 h = vec2(1.0, 0.0);
-    bool hit = false;
-    for (int i = 0; i < 80; i++) {
-      vec3 pp = roc + rdc * tt;
-      h = carMap(pp);
-      if (h.x < 0.0012) { hit = true; break; }
-      tt += h.x * 0.9;
-      if (tt > tEnd) break;
-    }
-    if (hit && tt < tMax) {
-      vec3 pos = roc + rdc * tt;
-      vec3 n = carNormal(pos);
-      vec3 v = -rdc;
-      vec3 rf = reflect(rdc, n);
-      vec3 rfw = rotY(rf, carYaw);
-      vec3 env = skyCol(normalize(vec3(rfw.x, max(rfw.y, 0.002), rfw.z)), t);
-      env = mix(lin(vec3(0.02, 0.01, 0.03)) + PINK * 0.08, env, smoothstep(-0.08, 0.06, rfw.y));
-      float fres = 0.04 + 0.96 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
-      vec3 sunL = rotY(SUNDIR, -carYaw);
-      float ao = clamp(carMap(pos + n * 0.09).x / 0.09, 0.2, 1.0);
-      vec3 c;
-      if (h.y < 1.5) {
-        vec3 basec = lin(vec3(0.035, 0.028, 0.05));
-        c = basec * (0.3 + 0.7 * max(dot(n, sunL), 0.0));
-        c += env * mix(0.06, 1.0, fres) * 0.8;
-        c += PINK * pow(max(dot(rf, sunL), 0.0), 50.0) * 1.6;
-        float sweep = 0.5 + 0.5 * sin(t * SPEED * 0.7 + pos.z * 0.9);
-        c += ORANGE * 0.5 * pow(max(dot(rf, normalize(vec3(0.6, 0.55, -0.3))), 0.0), 18.0) * sweep;
-        c += PINK * max(-n.y, 0.0) * 0.4 * smoothstep(0.5, 0.0, pos.y);
-        c *= ao;
-      } else if (h.y < 2.5) {
-        c = lin(vec3(0.01, 0.008, 0.015)) + env * mix(0.25, 1.0, fres) * 0.85;
-      } else if (h.y < 3.5) {
-        vec3 wp = vec3(abs(pos.x) - 0.82, pos.y - 0.28, abs(pos.z) - 1.32);
-        float rr = length(wp.yz);
-        float ang = atan(wp.z, wp.y) - t * SPEED * 2.6;
-        float spoke = step(0.5, fract(ang * 5.0 / (2.0 * PI)));
-        c = lin(vec3(0.012));
-        if (rr < 0.2) c = mix(lin(vec3(0.05)), env * 0.6 + PINK * 0.05, spoke);
-        c *= ao;
-      } else {
-        c = mix(RED, PINK, 0.35) * 3.0;
-      }
-      col = c;
-    }
-    // taillight bloom
-    for (int i = 0; i < 3; i++) {
-      vec3 L = vec3((float(i) - 1.0) * 0.6, 0.50, -2.13);
-      vec3 ol = L - roc;
-      float tl = dot(ol, rdc);
-      if (tl > 0.0) {
-        float d = length(ol - rdc * tl);
-        col += mix(RED, PINK, 0.4) * 0.0007 / (d * d + 0.0008);
       }
     }
   }
@@ -456,7 +331,7 @@ export function createHeroScene(canvas, opts = {}) {
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
   const U = {};
-  ['uRes', 'uTime', 'uMouse', 'uScroll', 'uIntro', 'uHue'].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
+  ['uRes', 'uTime', 'uMouse', 'uScroll', 'uIntro', 'uHue', 'uCamPos', 'uCam'].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
 
   const fixed = opts.fixed || null;
   const state = {
@@ -498,6 +373,9 @@ export function createHeroScene(canvas, opts = {}) {
     gl.uniform1f(U.uScroll, fixed ? fixed.scroll || 0 : state.scroll);
     gl.uniform1f(U.uIntro, fixed ? 1 : ease(state.intro));
     gl.uniform1f(U.uHue, fixed ? fixed.hue || 0 : 0);
+    const cam = fixed && fixed.cam;
+    gl.uniform3f(U.uCamPos, ...(cam ? cam.slice(0, 3) : [0, 0, 0]));
+    gl.uniform4f(U.uCam, ...(cam ? [...cam.slice(3, 6), 1] : [0, 0, 0, 0]));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 

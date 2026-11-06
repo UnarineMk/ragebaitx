@@ -12,6 +12,7 @@
 //    2. Set `video: 'clips/your-file.mp4'`.
 //    3. Set `sample: false` and replace views/likes with real numbers
 //       (or set them to '' to hide them).
+//    `hook` is the big caption printed on the thumbnail (keep it to 2-4 words).
 // ─────────────────────────────────────────────────────────────
 
 export const SOCIALS = [
@@ -50,6 +51,7 @@ export const CATEGORIES = ['All', 'GTA VI', 'Funny Moments', 'Chaos', 'Gameplay'
 export const CLIPS = [
   {
     id: 'six-star',
+    hook: '12 SECONDS. 6 STARS.',
     title: 'Six-Star Getaway Gone Wrong',
     desc: 'One wrong turn, every unit in the city, and a getaway plan that lasts twelve seconds.',
     category: 'GTA VI',
@@ -63,6 +65,7 @@ export const CLIPS = [
   },
   {
     id: 'parking',
+    hook: 'HE REALLY TRIED',
     title: 'The Worst Parking Job in Vice',
     desc: 'Confidence: maximum. Skill: questionable. Lamp post: destroyed.',
     category: 'Funny Moments',
@@ -76,6 +79,7 @@ export const CLIPS = [
   },
   {
     id: 'pier',
+    hook: 'THE PIER WON',
     title: 'Speedboat vs. Pier',
     desc: 'The pier did not move. The speedboat had other ideas.',
     category: 'Chaos',
@@ -89,6 +93,7 @@ export const CLIPS = [
   },
   {
     id: 'rooftop',
+    hook: 'ATTEMPT #47',
     title: 'Rooftop Jump: Attempt #47',
     desc: 'Forty-six failures led to this. Was it worth it? Watch to the end.',
     category: 'Gameplay',
@@ -101,6 +106,7 @@ export const CLIPS = [
   },
   {
     id: 'npc',
+    hook: 'WRONG NPC',
     title: 'When the NPC Fights Back',
     desc: 'He just wanted to cross the road. Big mistake.',
     category: 'Funny Moments',
@@ -113,6 +119,7 @@ export const CLIPS = [
   },
   {
     id: 'drift',
+    hook: 'NO BRAKES',
     title: 'Sunset Drift Session',
     desc: 'Clean lines, neon skies and absolutely no brakes.',
     category: 'Gameplay',
@@ -126,6 +133,7 @@ export const CLIPS = [
   },
   {
     id: 'standoff',
+    hook: 'NOBODY BLINKED',
     title: 'Gas Station Standoff',
     desc: 'Four players, one gas station, zero patience.',
     category: 'Chaos',
@@ -139,6 +147,7 @@ export const CLIPS = [
   },
   {
     id: 'viral-ramp',
+    hook: 'PHYSICS LEFT',
     title: 'The Ramp Everyone Is Talking About',
     desc: 'Physics left the chat. The comments section did not.',
     category: 'Viral',
@@ -149,10 +158,4 @@ export const CLIPS = [
     likes: '260K',
     sample: true,
   },
-];
-
-export const COLLECTIONS = [
-  { title: 'RageBaitX Originals', desc: 'Edited in-house. The clips that started it all.', thumbs: ['assets/thumbs/t1.webp', 'assets/thumbs/t6.webp', 'assets/thumbs/t3.webp'] },
-  { title: 'Community Clips', desc: 'Your best moments, featured. Submissions open soon.', thumbs: ['assets/thumbs/t5.webp', 'assets/thumbs/t2.webp', 'assets/thumbs/t8.webp'] },
-  { title: "Editor's Picks", desc: 'Hand-picked chaos, refreshed every week.', thumbs: ['assets/thumbs/t7.webp', 'assets/thumbs/t4.webp', 'assets/thumbs/t1.webp'] },
 ];
