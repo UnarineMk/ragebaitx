@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio — RageBaitX</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#080808" />
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/legal.css" />
+  <style>
+    .studio { max-width: 980px; margin: 0 auto; padding: clamp(60px, 9vw, 110px) var(--pad) 100px; }
+    .studio h1 { font-family: var(--f-display); font-size: clamp(48px, 8vw, 104px); line-height: 0.92; }
+    .studio .lede { color: rgba(245,245,245,.8); max-width: 620px; margin-top: 20px; font-size: 18px; }
+    .panel { margin-top: 48px; padding: 30px; background: var(--char); border: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; }
+    .panel__icon { width: 64px; height: 64px; display: grid; place-items: center; background: #000; border: 1px solid var(--line); }
+    .panel__icon svg { width: 34px; height: 34px; fill: #f5f5f5; }
+    .panel h2 { font-family: var(--f-display); font-size: 32px; line-height: 1; }
+    .panel p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+    .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .status i { width: 8px; height: 8px; border-radius: 50%; background: #666; }
+    .status.ok { color: #48e5a0; } .status.ok i { background: #48e5a0; box-shadow: 0 0 12px #48e5a0; }
+    .status.err { color: var(--orange); } .status.err i { background: var(--orange); }
+    .flow { list-style: none; padding: 0; margin: 56px 0 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: s; }
+    .flow li { position: relative; padding: 22px 18px; background: var(--char); border: 1px solid var(--line); counter-increment: s; }
+    .flow li::before { content: '0' counter(s); display: block; font-family: var(--f-mono); font-size: 12px; color: var(--pink); margin-bottom: 10px; }
+    .flow h3 { font-family: var(--f-display); font-size: 22px; line-height: 1.05; }
+    .flow p { color: var(--muted); font-size: 13px; margin-top: 6px; line-height: 1.5; }
+    .scopes { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .scopes span { font-family: var(--f-mono); font-size: 12px; padding: 8px 12px; border: 1px solid rgba(255,61,129,.45); color: var(--white); }
+    .fineprint { margin-top: 40px; color: rgba(245,245,245,.45); font-size: 13px; max-width: 700px; }
+    @media (max-width: 860px) { .panel { grid-template-columns: 1fr; } .flow { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="legal-nav">
+    <a class="nav__brand" href="index.html" aria-label="RageBaitX home">
+      <img src="assets/logo-512.webp" alt="" width="36" height="36" style="width:36px;height:36px;object-fit:cover;border-radius:4px" />
+      <span class="nav__word">RAGEBAIT<em>X</em></span>
+    </a>
+    <a class="back" href="index.html">← Back to site</a>
+  </header>
+
+  <main class="studio">
+    <p class="eyebrow mono"><span class="eyebrow__line"></span> RAGEBAITX STUDIO — INTERNAL PUBLISHING</p>
+    <h1>PUBLISHING<br /><span class="grad">STUDIO.</span></h1>
+    <p class="lede">Connect the RageBaitX TikTok account so our team can publish approved gaming clips to it. Every video is reviewed and approved by a person before it is posted.</p>
+
+    <section class="panel" aria-label="TikTok connection">
+      <div class="panel__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.4v13.4a2.9 2.9 0 1 1-2.9-2.9c.3 0 .6 0 .9.1V9.1a6.4 6.4 0 1 0 5.4 6.3V8.6a8 8 0 0 0 4.7 1.5V6.7a4.7 4.7 0 0 1-4.7-4.7z"/></svg></div>
+      <div>
+        <h2>TikTok account</h2>
+        <p>Uses Login Kit to connect our account. Permissions: basic profile info and video publishing.</p>
+        <p class="status" id="status"><i></i><span>Not connected on this device</span></p>
+      </div>
+      <a class="btn btn--primary" id="connect" href="https://redemptionclipping.app.n8n.cloud/webhook/ragebaitx-tiktok-connect">Connect TikTok</a>
+    </section>
+
+    <ol class="flow">
+      <li><h3>Upload</h3><p>A finished clip is added to our private Google Drive.</p></li>
+      <li><h3>Caption</h3><p>A draft caption and hashtags are prepared.</p></li>
+      <li><h3>Review</h3><p>A team member previews it and approves or rejects in Telegram.</p></li>
+      <li><h3>Publish</h3><p>Approved clips are uploaded to TikTok with the Content Posting API.</p></li>
+      <li><h3>Log</h3><p>The post status and link are saved to our publishing log.</p></li>
+    </ol>
+
+    <div class="scopes" aria-label="Requested TikTok scopes"><span>user.info.basic</span><span>video.publish</span></div>
+
+    <p class="fineprint">This page is for the RageBaitX team. It never posts anything on its own and does not access other TikTok users' data. See our <a href="privacy.html" style="color:var(--pink)">Privacy Policy</a> and <a href="terms.html" style="color:var(--pink)">Terms of Service</a>.</p>
+  </main>
+
+  <footer class="legal-foot">
+    <a href="index.html">Home</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a>
+  </footer>
+
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var el = document.getElementById('status');
+      var txt = el.querySelector('span');
+      if (q.get('status') === 'connected') {
+        el.className = 'status ok';
+        txt.textContent = 'Connected' + (q.get('name') ? ' as ' + q.get('name') : '') + ' — ready to publish';
+        document.getElementById('connect').textContent = 'Reconnect';
+      } else if (q.get('status') === 'error') {
+        el.className = 'status err';
+        txt.textContent = 'Connection failed: ' + (q.get('msg') || 'unknown error');
+      }
+    })();
+  </script>
+</body>
+</html>
