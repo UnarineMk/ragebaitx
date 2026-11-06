@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>RageBaitX — The Internet Is Your Playground</title>
+  <meta name="description" content="RageBaitX is a gaming entertainment brand turning GTA VI moments into viral clips. Funny moments, fails, insane gameplay and pure chaos." />
+  <meta name="theme-color" content="#080808" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="RageBaitX" />
+  <meta property="og:title" content="RageBaitX — The Internet Is Your Playground" />
+  <meta property="og:description" content="Where gaming moments become viral moments. GTA VI entertainment, unforgettable clips and pure chaos." />
+  <meta property="og:image" content="assets/og-image.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Organization","name":"RageBaitX","description":"Gaming entertainment and viral clipping brand focused on GTA VI.","logo":"assets/logo-512.webp"}
+  </script>
+</head>
+<body class="is-loading">
+  <a class="skip" href="#clips">Skip to content</a>
+
+  <!-- Intro loader -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <img class="loader__logo" src="assets/logo-512.webp" alt="" width="220" height="220" />
+      <div class="loader__bar"><span></span></div>
+      <p class="loader__label mono">LOADING WORLD <span class="loader__pct">0</span>%</p>
+    </div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <header class="nav" id="top">
+    <a class="nav__brand" href="#top" aria-label="RageBaitX home">
+      <img src="assets/logo-512.webp" alt="" width="40" height="40" />
+      <span class="nav__word">RAGEBAIT<em>X</em></span>
+    </a>
+    <nav class="nav__links" aria-label="Main">
+      <a href="#clips">Clips</a>
+      <a href="#trending">Trending</a>
+      <a href="#about">About</a>
+      <a href="#socials">Socials</a>
+    </nav>
+    <a class="btn btn--small btn--primary nav__cta" href="#socials">Follow</a>
+    <button class="nav__burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+  <div class="mobile-menu" hidden>
+    <a href="#clips">Clips</a><a href="#trending">Trending</a><a href="#about">About</a><a href="#socials">Socials</a>
+  </div>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="hero" aria-label="Introduction">
+      <div class="hero__sticky">
+        <div class="hero__scene">
+          <picture>
+            <source media="(max-aspect-ratio: 1/1)" srcset="assets/hero-poster-portrait.webp" />
+            <img class="hero__poster" src="assets/hero-poster.webp" alt="" />
+          </picture>
+          <canvas class="hero__canvas" aria-hidden="true"></canvas>
+        </div>
+        <div class="hero__shade" aria-hidden="true"></div>
+
+        <div class="hud hud--tl mono" aria-hidden="true">
+          <span class="live-dot"></span> LIVE FROM THE VICE COAST <span class="hud__clock">--:--</span>
+        </div>
+        <div class="hud hud--side mono" aria-hidden="true">EST. 2026 — GAMING ENTERTAINMENT — CLIPS — CHAOS</div>
+
+        <div class="hero__content">
+          <p class="eyebrow mono"><span class="eyebrow__line"></span> RAGEBAITX // GTA VI ENTERTAINMENT</p>
+          <h1 class="hero__title" aria-label="The internet is your playground.">
+            <span class="line"><span class="word">THE</span> <span class="word">INTERNET</span></span>
+            <span class="line"><span class="word">IS</span> <span class="word">YOUR</span></span>
+            <span class="line"><span class="word word--grad">PLAYGROUND.</span></span>
+          </h1>
+          <p class="hero__sub">Where gaming moments become viral moments. GTA VI entertainment, unforgettable clips and pure chaos.</p>
+          <div class="hero__ctas">
+            <a class="btn btn--primary" href="#clips">Explore the clips <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn--ghost" href="#socials">Join the movement</a>
+          </div>
+        </div>
+
+        <div class="hero__chapter" aria-hidden="true">
+          <p class="mono">CHAPTER 02</p>
+          <h2>EVERY CLIP STARTS<br />WITH A <span class="grad">MOMENT.</span></h2>
+        </div>
+
+        <div class="hud hud--br" aria-hidden="true">
+          <p class="mono">CHAOS LEVEL</p>
+          <div class="stars"><i></i><i></i><i></i><i></i><i class="off"></i></div>
+        </div>
+
+        <a class="scroll-cue" href="#clips" aria-label="Scroll to clips">
+          <span class="scroll-cue__mouse"><span></span></span>
+          <span class="mono">SCROLL TO DRIVE</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Marquee transition -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>GTA VI</span><b>✕</b><span>FUNNY MOMENTS</span><b>✕</b><span>PURE CHAOS</span><b>✕</b><span>INSANE GAMEPLAY</span><b>✕</b><span>GOING VIRAL</span><b>✕</b>
+        <span>GTA VI</span><b>✕</b><span>FUNNY MOMENTS</span><b>✕</b><span>PURE CHAOS</span><b>✕</b><span>INSANE GAMEPLAY</span><b>✕</b><span>GOING VIRAL</span><b>✕</b>
+      </div>
+    </div>
+
+    <!-- VIRAL CLIPS -->
+    <section class="clips section" id="clips" aria-labelledby="clips-title">
+      <div class="section__head">
+        <div>
+          <p class="eyebrow mono reveal"><span class="eyebrow__line"></span> 01 — VIRAL CLIPS</p>
+          <h2 class="section__title reveal" id="clips-title">THE INTERNET CAN'T<br /><span class="outline">HANDLE THESE</span> MOMENTS.</h2>
+        </div>
+        <div class="filters reveal" role="tablist" aria-label="Filter clips"></div>
+      </div>
+
+      <div class="featured reveal" id="featured"></div>
+      <div class="clip-grid" id="clip-grid"></div>
+      <p class="sample-note mono reveal">Demo content: titles, thumbnails and numbers are sample data until real clips are added.</p>
+    </section>
+
+    <!-- TRENDING -->
+    <section class="trending section" id="trending" aria-labelledby="trending-title">
+      <div class="section__head">
+        <div>
+          <p class="eyebrow mono reveal"><span class="live-dot"></span> 02 — LIVE FEED <span class="feed-clock"></span></p>
+          <h2 class="section__title reveal" id="trending-title">TRENDING <span class="grad">NOW</span></h2>
+        </div>
+        <div class="carousel-nav reveal">
+          <button class="icon-btn" data-dir="-1" data-target="rail-trending" aria-label="Scroll trending left"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="icon-btn" data-dir="1" data-target="rail-trending" aria-label="Scroll trending right"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="rail rail--shorts" id="rail-trending" tabindex="0" aria-label="Trending clips"></div>
+
+      <div class="row-head reveal">
+        <h3>LATEST UPLOADS</h3>
+        <div class="carousel-nav">
+          <button class="icon-btn" data-dir="-1" data-target="rail-latest" aria-label="Scroll latest left"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="icon-btn" data-dir="1" data-target="rail-latest" aria-label="Scroll latest right"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="rail rail--wide" id="rail-latest" tabindex="0" aria-label="Latest uploads"></div>
+
+      <div class="row-head reveal"><h3>FEATURED COLLECTIONS</h3></div>
+      <div class="collections" id="collections"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="about__bg" aria-hidden="true"></div>
+      <div class="about__inner section">
+        <div class="about__copy">
+          <p class="eyebrow mono reveal"><span class="eyebrow__line"></span> 03 — ABOUT RAGEBAITX</p>
+          <h2 class="about__title" id="about-title" data-scrub>WE DON'T JUST WATCH THE MOMENT. WE MAKE IT GO VIRAL.</h2>
+          <p class="about__lede reveal">RageBaitX is a gaming entertainment and content brand. We find the funniest, wildest and most unbelievable GTA VI moments, cut them into short-form clips that hit, and put them in front of millions of players across every platform.</p>
+          <ol class="steps">
+            <li class="reveal"><span class="steps__n mono">01</span><div><h3>DISCOVER</h3><p>Hours of gameplay, streams and community footage, scanned for the moments people can't stop replaying.</p></div></li>
+            <li class="reveal"><span class="steps__n mono">02</span><div><h3>EDIT</h3><p>Tight cuts, sharp captions, sound design and pacing built for Shorts, Reels and TikTok.</p></div></li>
+            <li class="reveal"><span class="steps__n mono">03</span><div><h3>DISTRIBUTE</h3><p>Published across YouTube, TikTok, Instagram and Facebook so every clip finds its audience.</p></div></li>
+          </ol>
+        </div>
+        <div class="about__visual reveal">
+          <div class="logo-card" data-tilt>
+            <img src="assets/logo-512.webp" alt="RageBaitX logo" width="512" height="512" loading="lazy" />
+            <span class="logo-card__glare" aria-hidden="true"></span>
+          </div>
+          <p class="logo-card__cap mono">OFFICIAL — RAGEBAITX</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOCIALS -->
+    <section class="socials section" id="socials" aria-labelledby="socials-title">
+      <div class="section__head">
+        <div>
+          <p class="eyebrow mono reveal"><span class="eyebrow__line"></span> 04 — JOIN THE MOVEMENT</p>
+          <h2 class="section__title reveal" id="socials-title">PICK YOUR <span class="grad">PLATFORM.</span></h2>
+        </div>
+        <p class="section__aside reveal">New clips drop every week. Follow RageBaitX wherever you scroll.</p>
+      </div>
+      <div class="social-grid" id="social-grid"></div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer__floor" aria-hidden="true"></div>
+    <div class="footer__inner">
+      <div class="footer__big" aria-hidden="true">RAGEBAITX</div>
+      <div class="footer__cols">
+        <div class="footer__brand">
+          <img src="assets/logo-512.webp" alt="RageBaitX" width="72" height="72" loading="lazy" />
+          <p>Where gaming moments become viral moments.</p>
+        </div>
+        <nav aria-label="Footer">
+          <h4 class="mono">NAVIGATE</h4>
+          <a href="#clips">Viral clips</a><a href="#trending">Trending</a><a href="#about">About</a><a href="#socials">Socials</a>
+        </nav>
+        <div>
+          <h4 class="mono">FOLLOW</h4>
+          <div id="footer-socials" class="footer__socials"></div>
+        </div>
+        <div>
+          <h4 class="mono">LEGAL</h4>
+          <a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a>
+        </div>
+      </div>
+      <div class="footer__base">
+        <p class="mono">© <span class="year">2026</span> RAGEBAITX. ALL RIGHTS RESERVED.</p>
+        <p class="footer__disclaimer">RageBaitX is an independent fan and entertainment brand. Not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. All game trademarks belong to their respective owners.</p>
+        <button class="to-top" aria-label="Back to top">
+          <svg class="to-top__ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" /></svg>
+          <svg class="to-top__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Video modal -->
+  <dialog class="modal" id="modal" aria-label="Clip player">
+    <button class="modal__close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="modal__body"></div>
+  </dialog>
+
+  <noscript><style>.loader{display:none}.reveal{opacity:1!important;transform:none!important}</style></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
